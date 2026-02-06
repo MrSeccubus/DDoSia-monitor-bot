@@ -7,6 +7,7 @@ import os
 import yaml
 from datetime import datetime
 import requests
+import re
 
 # Load config
 with open('config.yml', 'r') as f:
@@ -45,16 +46,20 @@ def save_state(state) :
 
 def output(msg) :   
     dutch = False  
+    new_dutch = ""  
     if ".nl\n" in msg.message :
         dutch = True
+    for line in msg.message.split("\n") :
+        if re.match("^\+ .*\.nl$",line) :
+            new_dutch="NEW"
     if "console" in config["out"] and config["out"]["console"] :
         if dutch:
-            print("The are Dutch tagets in the DDosia list\n")
+            print(f"There are {new_dutch} Dutch tagets in the DDosia list\n")
         print(msg.message)
     if "slack" in config["out"] and len(config["out"]["slack"]) > 0:
         payload = { "text" : msg.message }
         if dutch:
-            payload["text"] = "<!here> Dutch targets observed in DDoSia config\n\n"+payload["text"]
+            payload["text"] = f"<!here> {new_dutch} Dutch targets observed in DDoSia config\n\n"+payload["text"]
         for hook in config["out"]["slack"]:
             response = requests.post(hook, json=payload)
 
